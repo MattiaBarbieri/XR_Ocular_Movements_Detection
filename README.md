@@ -1,6 +1,7 @@
 # XR-Ocular-Movements-Detection
 Detecting Ocular Movements from HTC Vive Pro Eye (SRanipal) Raw Data with REMoDNaV. 
 
+PS: install remodnav (pip remodnav) inside the Virtual Environment
 
 🧪 1. data_processing.py
     This module is the core of the data pre-processing:
