@@ -37,4 +37,4 @@ PS: install remodnav (pip remodnav) inside the Virtual Environment
         - Prints the results and saves them in a Data.tsv file.
 
 👁️‍🗨️ 4. Eye_detection_GUI.py
-    Trigger the process from GUI
+    Trigger the process from GUI (optional)
