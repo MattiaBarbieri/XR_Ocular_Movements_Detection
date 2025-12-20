@@ -117,11 +117,12 @@ class DataProcessing(object):
         horizontal_FOV = 106
         vertical_FOV = 110
 
-        gaze_deg_L_x = gaze_pix_L_x * (horizontal_FOV / 1440)
-        gaze_deg_L_y = gaze_pix_L_y * (vertical_FOV / 1600)
-        gaze_deg_R_x = gaze_pix_R_x * (horizontal_FOV / 1440)
-        gaze_deg_R_y = gaze_pix_R_y * (vertical_FOV / 1600)
+        gaze_deg_L_x = gaze_pix_L_x * (horizontal_FOV / screen_width_pix )
+        gaze_deg_L_y = gaze_pix_L_y * (vertical_FOV / screen_height_pix)
+        gaze_deg_R_x = gaze_pix_R_x * (horizontal_FOV / screen_width_pix )
+        gaze_deg_R_y = gaze_pix_R_y * (vertical_FOV / screen_height_pix)
         print(gaze_deg_L_x[0], gaze_deg_R_x[0])
+        
         return((gaze_pix_L_x, gaze_pix_L_y, gaze_pix_R_x, gaze_pix_R_y),                 # ritorno in due tuple i dati converiti
                 (gaze_deg_L_x, gaze_deg_L_y, gaze_deg_R_x, gaze_deg_R_y), self.time)     # nelle variabili pixel_data e deg_data
 
