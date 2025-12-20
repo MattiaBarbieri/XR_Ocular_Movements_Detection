@@ -63,6 +63,7 @@ class DataProcessing(object):
         self.gaze_origin_Ry = df["gaze_origin_R.y(mm)"]
         self.gaze_origin_Rz = df["gaze_origin_R.z(mm)"]
 
+
         self.gaze_direct_Rx = df["gaze_direct_R.x"]
         self.gaze_direct_Ry = df["gaze_direct_R.y"]
         self.gaze_direct_Rz = df["gaze_direct_R.z"]
@@ -91,80 +92,36 @@ class DataProcessing(object):
         self.gaze_direct_Ry[self.eye_valid_R < 31] = np.nan
         self.gaze_direct_Rz[self.eye_valid_R < 31] = np.nan
 
-        # # Interpolazione lineare
-        # self.gaze_direct_Lx = pd.Series(self.gaze_direct_Lx).interpolate().to_numpy()
-        # self.gaze_direct_Ly = pd.Series(self.gaze_direct_Ly).interpolate().to_numpy()
-        # self.gaze_direct_Lz = pd.Series(self.gaze_direct_Lz).interpolate().to_numpy()
-        #
-        # self.gaze_direct_Rx = pd.Series(self.gaze_direct_Rx).interpolate().to_numpy()
-        # self.gaze_direct_Ry = pd.Series(self.gaze_direct_Ry).interpolate().to_numpy()
-        # self.gaze_direct_Rz = pd.Series(self.gaze_direct_Rz).interpolate().to_numpy()
-
 
         # conversion of GAZE DIRECTION to Vector3 in MM.
-        K_L = self.gaze_origin_Lz / self.gaze_direct_Lz
-        K_R = self.gaze_origin_Rz / self.gaze_direct_Rz
+        K_L = - self.gaze_origin_Lz / self.gaze_direct_Lz
+        K_R = - self.gaze_origin_Rz / self.gaze_direct_Rz
 
         mm_L_x = self.gaze_direct_Lx * K_L + self.gaze_origin_Lx
         mm_L_y = self.gaze_direct_Ly * K_L + self.gaze_origin_Ly
         mm_R_x = self.gaze_direct_Rx * K_R + self.gaze_origin_Rx
         mm_R_y = self.gaze_direct_Ry * K_R + self.gaze_origin_Ry
 
-
-        # conversion of GAZE DIRECTION from MM in PIXELS.
-
-        # # Dimensioni fisiche di ciascun display (in mm)
-        # screen_width_mm = 59.5
-        # screen_height_mm = 66
-        #
-        # # Risoluzione di ciascun display (in pixel)
-        # screen_width_px = 1440
-        # screen_height_px = 1600
-        #
-        # # Conversione da millimetri a pixel per ciascun occhio
-        # gaze_pix_L_x = (mm_L_x / screen_width_mm) * screen_width_px
-        # gaze_pix_L_y = (mm_L_y / screen_height_mm) * screen_height_px
-        # gaze_pix_R_x = (mm_R_x / screen_width_mm) * screen_width_px
-        # gaze_pix_R_y = (mm_R_y / screen_height_mm) * screen_height_px
-        #
-        # # Rimappatura su uno schermo virtuale combinato (2880x1600)
-        # # Sposta l'occhio destro a destra, come se fosse sul secondo schermo
-        # gaze_pix_R_x += screen_width_px
-        #
-        # # Centra entrambi gli occhi rispetto al centro dello schermo virtuale (1440, 800)
-        # gaze_pix_L_x -= screen_width_px
-        # gaze_pix_R_x -= screen_width_px
-        # gaze_pix_L_y -= screen_height_px / 2
-        # gaze_pix_R_y -= screen_height_px / 2
-
-
-        screen_width = 119
-        screen_height = 66
-        screen_width_pix = 2880
+        screen_width = 59.5
+        screen_height = 66.1
+        screen_width_pix = 1400
         screen_height_pix = 1600
 
-        gaze_pix_L_x = screen_width_pix - ((screen_width_pix * mm_L_x) / screen_width + 1440)  # 199 mm is the width of both screens (59.5 each).
-        gaze_pix_L_y = screen_height_pix - ((screen_height_pix * mm_L_y) / screen_height + 800)
-        gaze_pix_R_x = screen_width_pix - ((screen_width_pix * mm_R_x) / screen_width + 1440)
-        gaze_pix_R_y = screen_height_pix - ((screen_height_pix * mm_R_y) / screen_height + 800)
-
-        # remap to the screen's center.
-        gaze_pix_L_x = gaze_pix_L_x - 720
-        gaze_pix_L_y = gaze_pix_L_y - 800
-        gaze_pix_R_x = gaze_pix_R_x - 2160
-        gaze_pix_R_y = gaze_pix_R_y - 800
+        gaze_pix_L_x = screen_width_pix + mm_L_x * (screen_width_pix / screen_width)
+        gaze_pix_L_y = screen_height_pix + mm_L_y * (screen_height_pix / screen_height)
+        gaze_pix_R_x = screen_width_pix + mm_R_x * (screen_width_pix / screen_width)
+        gaze_pix_R_y = screen_height_pix + mm_R_y * (screen_height_pix / screen_height)
 
 
         #conversion of GAZE DIRECTION from PIXELS  in DEGREES.
-
-        horizontal_FOV = 98
-        vertical_FOV = 98
+        horizontal_FOV = 106
+        vertical_FOV = 110
 
         gaze_deg_L_x = gaze_pix_L_x * (horizontal_FOV / 1440)
         gaze_deg_L_y = gaze_pix_L_y * (vertical_FOV / 1600)
         gaze_deg_R_x = gaze_pix_R_x * (horizontal_FOV / 1440)
         gaze_deg_R_y = gaze_pix_R_y * (vertical_FOV / 1600)
-
+        print(gaze_deg_L_x[0], gaze_deg_R_x[0])
         return((gaze_pix_L_x, gaze_pix_L_y, gaze_pix_R_x, gaze_pix_R_y),                 # ritorno in due tuple i dati converiti
                 (gaze_deg_L_x, gaze_deg_L_y, gaze_deg_R_x, gaze_deg_R_y), self.time)     # nelle variabili pixel_data e deg_data
 
@@ -263,31 +220,36 @@ class DataProcessing(object):
         self.gaze_direct_Ry[self.eye_valid_R < 31] = np.nan
         self.gaze_direct_Rz[self.eye_valid_R < 31] = np.nan
 
-        # # Interpolazione lineare
-        # self.gaze_direct_Lx = pd.Series(self.gaze_direct_Lx).interpolate().to_numpy()
-        # self.gaze_direct_Ly = pd.Series(self.gaze_direct_Ly).interpolate().to_numpy()
-        # self.gaze_direct_Lz = pd.Series(self.gaze_direct_Lz).interpolate().to_numpy()
-        #
-        # self.gaze_direct_Rx = pd.Series(self.gaze_direct_Rx).interpolate().to_numpy()
-        # self.gaze_direct_Ry = pd.Series(self.gaze_direct_Ry).interpolate().to_numpy()
-        # self.gaze_direct_Rz = pd.Series(self.gaze_direct_Rz).interpolate().to_numpy()
 
-        # Conversione in gradi visivi
+        # Conversione in gradi visivi ( togliere * 180 / np.pi se si vogliono i rad)
         eye_L_x = np.arctan2(self.gaze_direct_Lx, self.gaze_direct_Lz) * 180 / np.pi
         eye_L_y = np.arctan2(self.gaze_direct_Ly, self.gaze_direct_Lz) * 180 / np.pi
         eye_R_x = np.arctan2(self.gaze_direct_Rx, self.gaze_direct_Rz) * 180 / np.pi
         eye_R_y = np.arctan2(self.gaze_direct_Ry, self.gaze_direct_Rz) * 180 / np.pi
 
+
+        # Conversione in pixels
+        tot_pixel_width = 2880
+        tot_pixel_height = 1600
+        horizontal_FOV = 107
+        vertical_FOV = 110
+
+        # per pxel . eye-l-x * tot pixel width / horizontal fov
+        pix_L_x = eye_L_x * tot_pixel_width / horizontal_FOV
+        pix_L_y = eye_L_y * tot_pixel_height / vertical_FOV
+        pix_R_x = eye_R_x * tot_pixel_width / horizontal_FOV
+        pix_R_y = eye_R_y * tot_pixel_height / vertical_FOV
+
         return eye_L_x, eye_L_y, eye_R_x, eye_R_y, self.time
+
 
     def plot_results(self):
         # IMPORT DATA
         # Data from xlsx file (put name in parameters)
-        data = DataProcessing(sys.argv[1])
+        # data = DataProcessing(sys.argv[1])
 
         # EYE Data Processed and Time
         pixel_data, deg_data, time = self.gaze_conversion()
-    
         gaze_L_x, gaze_L_y, gaze_R_x, gaze_R_y = deg_data
 
 
@@ -370,15 +332,15 @@ class DataProcessing(object):
         # PLOT LEFT EYE
         fig3, axis = plt.subplots(2)
 
-        axis[0].plot(time, gaze_R_x, color="tab:blue", label=("Left Eye X"))
-        axis[0].scatter(time, gaze_R_x, color="tab:blue", alpha=0.2)
+        axis[0].plot(time, self.gaze_direct_Lx, color="tab:blue", label=("Left Eye X"))
+        axis[0].scatter(time, self.gaze_direct_Lx, color="tab:blue", alpha=0.2)
         # axis[0].set_title("GAZE DIRECTION X")
         axis[0].set_xlabel("Time (s)")
         axis[0].set_ylabel("Direct X (°)")
         axis[0].legend()
 
-        axis[1].plot(time, gaze_R_y, color="tab:blue", label=("Left Eye Y"))
-        axis[1].scatter(time, gaze_R_y, color="tab:blue", alpha=0.2)
+        axis[1].plot(time, self.gaze_direct_Ly, color="tab:blue", label=("Left Eye Y"))
+        axis[1].scatter(time, self.gaze_direct_Ly, color="tab:blue", alpha=0.2)
         # axis[1].set_title("GAZE DIRECTION Y")
         axis[1].set_xlabel("Time (s)")
         axis[1].set_ylabel("Direct Y (°)")
@@ -388,21 +350,22 @@ class DataProcessing(object):
         fig3.canvas.manager.set_window_title('Left_Gaze')
         plt.show()
 
+
         # PLOT RIGHT EYE
         fig4, axis = plt.subplots(2)
 
-        axis[0].plot(time, gaze_R_x, color="tab:orange", label=("Right Eye X"))
-        axis[0].scatter(time, gaze_R_x, color="tab:orange", alpha=0.2)
+        axis[0].plot(time, self.gaze_direct_Rx, color="tab:orange", label=("Right Eye X"))
+        axis[0].scatter(time, self.gaze_direct_Rx, color="tab:orange", alpha=0.2)
         # axis[0].set_title("GAZE DIRECTION X")
         axis[0].set_xlabel("Time (s)")
-        axis[0].set_ylabel("Direct X (°)")
+        axis[0].set_ylabel("Direct X (Vector)")
         axis[0].legend()
 
-        axis[1].plot(time, gaze_R_y, color="tab:orange", label=("Right Eye Y"))
-        axis[1].scatter(time, gaze_R_y, color="tab:orange", alpha=0.2)
+        axis[1].plot(time, self.gaze_direct_Ry, color="tab:orange", label=("Right Eye Y"))
+        axis[1].scatter(time, self.gaze_direct_Ry, color="tab:orange", alpha=0.2)
         # axis[1].set_title("GAZE DIRECTION Y")
         axis[1].set_xlabel("Time (s)")
-        axis[1].set_ylabel("Direct Y (°)")
+        axis[1].set_ylabel("Direct X (Vector)")
         axis[1].legend()
 
         fig4.suptitle('Right Gaze Direction', fontsize=16)
@@ -413,18 +376,17 @@ class DataProcessing(object):
         # PLOT BOTH EYES OVERVIEW
         fig5, (axis1, axis2) = plt.subplots(1, 2)
 
-        axis1.plot(gaze_L_x , gaze_L_y, color="tab:blue", label=("Left Eye"), alpha=0.3)
-        axis1.scatter(gaze_L_x, gaze_L_y, color="tab:blue", alpha=0.3)
-        axis1.set_xlabel("Horizontal Eye Position (deg)")
-        axis1.set_ylabel("Vertical Eye Position (deg)")
+        axis1.plot(self.gaze_direct_Lx , self.gaze_direct_Ly, color="tab:blue", label=("Left Eye"), alpha=0.3)
+        axis1.scatter(self.gaze_direct_Lx, self.gaze_direct_Ly, color="tab:blue", alpha=0.3)
+        axis1.set_xlabel("Normalized Vector")
+        axis1.set_ylabel("Normalized Vector")
         axis1.legend()
 
-        axis2.plot(gaze_R_x, gaze_R_y, color="tab:orange", label=("Right Eye"), alpha=0.3)
-        axis2.scatter(gaze_R_x, gaze_R_y, color="tab:orange", alpha=0.3)
-        axis2.set_xlabel("Horizontal Eye Position (deg)")
-        axis2.set_ylabel("Vertical Eye Position (deg)")
+        axis2.plot( self.gaze_direct_Rx,  self.gaze_direct_Ry, color="tab:orange", label=("Right Eye"), alpha=0.3)
+        axis2.scatter( self.gaze_direct_Rx,  self.gaze_direct_Ry, color="tab:orange", alpha=0.3)
+        axis2.set_xlabel("Normalized Vector")
+        axis2.set_ylabel("Normalized Vector")
         axis2.legend()
-
 
         fig5.suptitle('Gazes Direction ', fontsize=16)
         fig5.canvas.manager.set_window_title('Gazes')
@@ -457,32 +419,39 @@ class DataProcessing(object):
         plt.show()
 
 
-        # fig, (axis1, axis2) = plt.subplots(2)   horizontal alingment
-        fig7, (axis1, axis2, axis3) = plt.subplots(1, 3)
+        # PLOT COMPARISON
+        fig7, (axis1, axis2) = plt.subplots(1, 2)
 
-        axis1.plot(self.gaze_direct_Lx, self.gaze_direct_Ly, color="tab:blue", label=("Left Eye"), alpha=0.3)
-        axis1.scatter(self.gaze_direct_Lx, self.gaze_direct_Ly, color="tab:blue", alpha=0.3)
-        axis1.plot(self.gaze_direct_Rx, self.gaze_direct_Ry, color="tab:orange", label=("Right Eye"), alpha=0.3)
-        axis1.scatter(self.gaze_direct_Rx, self.gaze_direct_Ry, color="tab:orange", alpha=0.3)
-        axis1.set_title("Gaze Direction Normalized")
+        gaze_L_x = gaze_L_x - gaze_L_x[0]
+        gaze_L_y = gaze_L_y - gaze_L_y[0]
+        gaze_R_x = gaze_R_x - gaze_R_x[0]
+        gaze_R_y = gaze_R_y - gaze_R_y[0]
+
+
+        axis1.plot(gaze_L_x, gaze_L_y, color="tab:orange", label=("My Conv"), alpha=0.3)
+        axis1.scatter(gaze_L_x, gaze_L_y, color="tab:orange", alpha=0.3)
+        axis1.plot(gaze_R_x, gaze_R_y, color="tab:blue", alpha=0.3)
+        axis1.scatter(gaze_R_x, gaze_R_y, color="tab:blue", alpha=0.3)
+        axis1.set_xlabel("Horizontal Left Eye Position (deg)")
+        axis1.set_ylabel("Time (s)")
         axis1.legend()
 
-        axis2.plot(gaze_L_x, gaze_L_y, color="tab:blue", label=("Left Eye"), alpha=0.3)
-        axis2.scatter(gaze_L_x, gaze_L_y, color="tab:blue", alpha=0.3)
-        axis2.plot(gaze_R_x, gaze_R_y, color="tab:orange", label=("Right Eye"), alpha=0.3)
-        axis2.scatter(gaze_R_x, gaze_R_y, color="tab:orange", alpha=0.3)
-        axis2.set_title("Gaze Direction Degrees")
+        eye_L_x, eye_L_y, eye_R_x, eye_R_y, self.time = self.FromRawtoDeg()
+        eye_L_x = eye_L_x - eye_L_x[0]
+        eye_L_y = eye_L_y - eye_L_y[0]
+        eye_R_x = eye_R_x - eye_R_x[0]
+        eye_R_y = eye_R_y - eye_R_y[0]
+
+        axis2.plot(eye_R_x, eye_R_y, color="tab:orange", label=("Imaoka Conv"), alpha=0.3)
+        axis2.scatter(eye_R_x, eye_R_y, color="tab:orange", alpha=0.3)
+        axis2.plot(eye_L_x, eye_L_y, color="tab:blue", alpha=0.3)
+        axis2.scatter(eye_L_x, eye_L_y, color="tab:blue", alpha=0.3)
+        axis2.set_xlabel("Horizontal Right Eye Position (deg)")
+        axis2.set_ylabel("Time (s)")
         axis2.legend()
 
-        axis3.plot(self.gaze_contingency_Lx, self.gaze_contingency_Ly, color="tab:blue", label=("Left Eye"), alpha=0.3)
-        axis3.scatter(self.gaze_contingency_Lx, self.gaze_contingency_Ly, color="tab:blue", alpha=0.3)
-        axis3.plot(self.gaze_contingency_Rx, self.gaze_contingency_Ry, color="tab:orange", label=("Right Eye"), alpha=0.3)
-        axis3.scatter(self.gaze_contingency_Rx, self.gaze_contingency_Ry, color="tab:orange", alpha=0.3)
-        axis3.set_title("Gaze Contingency")
-        axis3.legend()
-
-        fig7.suptitle('Fixation Point and Gaze ', fontsize=16)
-        fig7.canvas.manager.set_window_title('Fixation Point and Gaze')
+        fig7.suptitle('Comparison', fontsize=16)
+        fig7.canvas.manager.set_window_title('Gazes')
         plt.show()
 
 
@@ -519,27 +488,6 @@ class DataProcessing(object):
         plt.show()
 
 
-        fig9, (axis1, axis2) = plt.subplots(1, 2)
-
-        axis1.plot(gaze_R_x, time, color="tab:orange", label=("My Conv"), alpha=0.3)
-        axis1.scatter(gaze_R_x, time, color="tab:orange", alpha=0.3)
-        axis1.set_xlabel("Horizontal Left Eye Position (deg)")
-        axis1.set_ylabel("Time (s)")
-        axis1.legend()
-
-
-        eye_L_x, eye_L_y, eye_R_x, eye_R_y, self.time = self.FromRawtoDeg()
-        axis2.plot(eye_R_x, time, color="tab:orange", label=("Imaoka Conv"), alpha=0.3)
-        axis2.scatter(eye_R_x, time, color="tab:orange", alpha=0.3)
-        axis2.set_xlabel("Horizontal Right Eye Position (deg)")
-        axis2.set_ylabel("Time (s)")
-        axis2.legend()
-
-
-        fig9.suptitle('Comparison', fontsize=16)
-        fig9.canvas.manager.set_window_title('Gazes')
-        plt.show()
-
 
 if __name__ == '__main__':         # varibiliatoe python che controlla s elo script è lanciato o importato da un altro script; se eseguo saccadesconv da un altro script, queste righe non vengono eseguite
     if len(sys.argv) != 2:          # sosituisco la riga12 , mettendo nei paramteri dello script il nome del file xlsx su cui lavorare
@@ -547,6 +495,5 @@ if __name__ == '__main__':         # varibiliatoe python che controlla s elo scr
     else:
         data = DataProcessing(sys.argv[1])        #creo oggetto di tipo DataProcessing
         # print(data.gaze_conversion())           #collaudo del modulo
-
 
         plot = data.plot_results()
