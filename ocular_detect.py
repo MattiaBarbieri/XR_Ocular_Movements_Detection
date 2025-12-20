@@ -33,7 +33,7 @@ def compute_prl(fixa_coords):
     return x_mean, y_mean, x_std, y_std
 
 def process_events(lines, indices):
-    Kpix_deg = 0.068055
+    Kpix_deg = 0.068075 #from data processing, deg conversion, horizontal_FOV / screen_height_pix
     sacc_ampl_min_threshold = 2 / Kpix_deg #2°
     fixa_dur_min_threshold = 0.1  #100ms
     purs_vel_min_threshold = 5 #5°/s
