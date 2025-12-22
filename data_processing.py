@@ -117,12 +117,11 @@ class DataProcessing(object):
         horizontal_FOV = 106
         vertical_FOV = 110
 
-        gaze_deg_L_x = gaze_pix_L_x * (horizontal_FOV / screen_width_pix )
+        gaze_deg_L_x = gaze_pix_L_x * (horizontal_FOV / screen_width_pix)
         gaze_deg_L_y = gaze_pix_L_y * (vertical_FOV / screen_height_pix)
-        gaze_deg_R_x = gaze_pix_R_x * (horizontal_FOV / screen_width_pix )
+        gaze_deg_R_x = gaze_pix_R_x * (horizontal_FOV / screen_width_pix)
         gaze_deg_R_y = gaze_pix_R_y * (vertical_FOV / screen_height_pix)
         print(gaze_deg_L_x[0], gaze_deg_R_x[0])
-        
         return((gaze_pix_L_x, gaze_pix_L_y, gaze_pix_R_x, gaze_pix_R_y),                 # ritorno in due tuple i dati converiti
                 (gaze_deg_L_x, gaze_deg_L_y, gaze_deg_R_x, gaze_deg_R_y), self.time)     # nelle variabili pixel_data e deg_data
 
@@ -252,7 +251,7 @@ class DataProcessing(object):
         # EYE Data Processed and Time
         pixel_data, deg_data, time = self.gaze_conversion()
         gaze_L_x, gaze_L_y, gaze_R_x, gaze_R_y = deg_data
-
+        eye_L_x, eye_L_y, eye_R_x, eye_R_y, self.time = self.FromRawtoDeg()
 
         # HEAD Data Processed
         head_pos_x, head_pos_y, head_pos_z = self.head_pos_conversion()
@@ -272,9 +271,6 @@ class DataProcessing(object):
         roll_x_shift = roll_x - roll_x[0]  # substract first element from the list to shift posizion to 0
         pitch_y_shift = pitch_y - pitch_y[0]
         yaw_z_shift = yaw_z - yaw_z[0]
-
-        gaze_R_x_shift = gaze_R_x - gaze_R_x[0]
-        gaze_R_y_shift = gaze_R_y - gaze_R_y[0]
 
 
         # PLOT HEAD POSITION
@@ -333,18 +329,21 @@ class DataProcessing(object):
         # PLOT LEFT EYE
         fig3, axis = plt.subplots(2)
 
-        axis[0].plot(time, self.gaze_direct_Lx, color="tab:blue", label=("Left Eye X"))
-        axis[0].scatter(time, self.gaze_direct_Lx, color="tab:blue", alpha=0.2)
+        gaze_L_x = gaze_L_x - gaze_L_x[0]
+        gaze_L_y = gaze_L_y - gaze_L_y[0]
+
+        axis[0].plot(time, gaze_L_x, color="tab:blue", label=("Left Eye X"), alpha = 0.2)
+        axis[0].scatter(time, gaze_L_x, color="tab:blue", alpha=0.1)
         # axis[0].set_title("GAZE DIRECTION X")
         axis[0].set_xlabel("Time (s)")
-        axis[0].set_ylabel("Direct X (°)")
+        axis[0].set_ylabel("Horizontal Gaze Direction (°)")
         axis[0].legend()
 
-        axis[1].plot(time, self.gaze_direct_Ly, color="tab:blue", label=("Left Eye Y"))
-        axis[1].scatter(time, self.gaze_direct_Ly, color="tab:blue", alpha=0.2)
+        axis[1].plot(time, gaze_L_y, color="tab:blue", label=("Left Eye Y"), alpha = 0.2)
+        axis[1].scatter(time, gaze_L_y, color="tab:blue", alpha=0.1)
         # axis[1].set_title("GAZE DIRECTION Y")
         axis[1].set_xlabel("Time (s)")
-        axis[1].set_ylabel("Direct Y (°)")
+        axis[1].set_ylabel("Vertical Gaze Direction(°)")
         axis[1].legend()
 
         fig3.suptitle(' Left Gaze Direction', fontsize=16)
@@ -355,18 +354,21 @@ class DataProcessing(object):
         # PLOT RIGHT EYE
         fig4, axis = plt.subplots(2)
 
-        axis[0].plot(time, self.gaze_direct_Rx, color="tab:orange", label=("Right Eye X"))
-        axis[0].scatter(time, self.gaze_direct_Rx, color="tab:orange", alpha=0.2)
+        gaze_R_x = gaze_R_x - gaze_R_x[0]
+        gaze_R_y = gaze_R_y - gaze_R_y[0]
+
+        axis[0].plot(time, gaze_R_x, color="tab:orange", label=("Right Gaze X"), alpha=0.2)
+        axis[0].scatter(time, gaze_R_x, color="tab:orange", alpha=0.1)
         # axis[0].set_title("GAZE DIRECTION X")
         axis[0].set_xlabel("Time (s)")
-        axis[0].set_ylabel("Direct X (Vector)")
+        axis[0].set_ylabel("Horizontal Gaze Direction (°)")
         axis[0].legend()
 
-        axis[1].plot(time, self.gaze_direct_Ry, color="tab:orange", label=("Right Eye Y"))
-        axis[1].scatter(time, self.gaze_direct_Ry, color="tab:orange", alpha=0.2)
+        axis[1].plot(time, gaze_R_y, color="tab:orange", label=("Right Gaze Y"), alpha=0.2)
+        axis[1].scatter(time, gaze_R_y, color="tab:orange", alpha=0.1)
         # axis[1].set_title("GAZE DIRECTION Y")
         axis[1].set_xlabel("Time (s)")
-        axis[1].set_ylabel("Direct X (Vector)")
+        axis[1].set_ylabel("Vertical Gaze Direction (°)")
         axis[1].legend()
 
         fig4.suptitle('Right Gaze Direction', fontsize=16)
@@ -377,16 +379,19 @@ class DataProcessing(object):
         # PLOT BOTH EYES OVERVIEW
         fig5, (axis1, axis2) = plt.subplots(1, 2)
 
-        axis1.plot(self.gaze_direct_Lx , self.gaze_direct_Ly, color="tab:blue", label=("Left Eye"), alpha=0.3)
-        axis1.scatter(self.gaze_direct_Lx, self.gaze_direct_Ly, color="tab:blue", alpha=0.3)
-        axis1.set_xlabel("Normalized Vector")
-        axis1.set_ylabel("Normalized Vector")
+        gaze_L_x = gaze_L_x - gaze_L_x[0]
+        gaze_L_y = gaze_L_y - gaze_L_y[0]
+
+        axis1.plot(gaze_L_x , gaze_L_y, color="tab:blue", label=("Left Eye"), alpha=0.2)
+        axis1.scatter(gaze_L_x, gaze_L_y, color="tab:blue", alpha=0.1)
+        axis1.set_xlabel("Horizontal Gaze Direction (°))")
+        axis1.set_ylabel("Vertical Gaze Direction (°)")
         axis1.legend()
 
-        axis2.plot( self.gaze_direct_Rx,  self.gaze_direct_Ry, color="tab:orange", label=("Right Eye"), alpha=0.3)
-        axis2.scatter( self.gaze_direct_Rx,  self.gaze_direct_Ry, color="tab:orange", alpha=0.3)
-        axis2.set_xlabel("Normalized Vector")
-        axis2.set_ylabel("Normalized Vector")
+        axis2.plot(gaze_R_x, gaze_R_y, color="tab:orange", label=("Right Eye"), alpha=0.2)
+        axis2.scatter(gaze_R_x, gaze_R_y, color="tab:orange", alpha=0.1)
+        axis2.set_xlabel("Horizontal Gaze Direction (°)")
+        axis2.set_ylabel("Vertical Gaze Direction (°)")
         axis2.legend()
 
         fig5.suptitle('Gazes Direction ', fontsize=16)
@@ -428,27 +433,25 @@ class DataProcessing(object):
         gaze_R_x = gaze_R_x - gaze_R_x[0]
         gaze_R_y = gaze_R_y - gaze_R_y[0]
 
-
-        axis1.plot(gaze_L_x, gaze_L_y, color="tab:orange", label=("My Conv"), alpha=0.3)
-        axis1.scatter(gaze_L_x, gaze_L_y, color="tab:orange", alpha=0.3)
-        axis1.plot(gaze_R_x, gaze_R_y, color="tab:blue", alpha=0.3)
-        axis1.scatter(gaze_R_x, gaze_R_y, color="tab:blue", alpha=0.3)
-        axis1.set_xlabel("Horizontal Left Eye Position (deg)")
-        axis1.set_ylabel("Time (s)")
+        axis1.plot(gaze_L_x, gaze_L_y, color="tab:blue", label=("My Conv"), alpha=0.2)
+        axis1.scatter(gaze_L_x, gaze_L_y, color="tab:blue", alpha=0.1)
+        axis1.plot(gaze_R_x, gaze_R_y, color="tab:orange", alpha=0.2)
+        axis1.scatter(gaze_R_x, gaze_R_y, color="tab:orange", alpha=0.1)
+        axis1.set_xlabel("Horizontal Gaze Direction Position (°)")
+        axis1.set_ylabel("Vertical Gaze Direction Position (°)")
         axis1.legend()
 
-        eye_L_x, eye_L_y, eye_R_x, eye_R_y, self.time = self.FromRawtoDeg()
         eye_L_x = eye_L_x - eye_L_x[0]
         eye_L_y = eye_L_y - eye_L_y[0]
         eye_R_x = eye_R_x - eye_R_x[0]
         eye_R_y = eye_R_y - eye_R_y[0]
 
-        axis2.plot(eye_R_x, eye_R_y, color="tab:orange", label=("Imaoka Conv"), alpha=0.3)
-        axis2.scatter(eye_R_x, eye_R_y, color="tab:orange", alpha=0.3)
-        axis2.plot(eye_L_x, eye_L_y, color="tab:blue", alpha=0.3)
-        axis2.scatter(eye_L_x, eye_L_y, color="tab:blue", alpha=0.3)
-        axis2.set_xlabel("Horizontal Right Eye Position (deg)")
-        axis2.set_ylabel("Time (s)")
+        axis2.plot(eye_L_x, eye_L_y, color="tab:blue", alpha=0.2)
+        axis2.scatter(eye_L_x, eye_L_y, color="tab:blue", alpha=0.1)
+        axis2.plot(eye_R_x, eye_R_y, color="tab:orange", label=("Imaoka Conv"), alpha=0.2)
+        axis2.scatter(eye_R_x, eye_R_y, color="tab:orange", alpha=0.1)
+        axis2.set_xlabel("Horizontal Gaze Direction Position (°)")
+        axis2.set_ylabel("Vertical Gaze Direction Position (°)")
         axis2.legend()
 
         fig7.suptitle('Comparison', fontsize=16)
